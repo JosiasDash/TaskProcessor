@@ -1,0 +1,20 @@
+Faire un formulaire pour les différents type de task
+    - SET ALARM {
+        heure
+        min
+    }
+
+    - LAUNCH PROGRAM {
+        path
+        args []
+    }
+
+    - CLEAN REPOSITORY {
+        path
+    }
+
+Créer et contrôler des threads
+Faire un factory pour les tasks
+Créer un controleur de task (task en cours, ...)
+
+fonction de thread (form)

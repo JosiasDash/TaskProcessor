@@ -1,0 +1,10 @@
+[package]
+name = "TaskProcessor"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+exec = "0.3.1"
+json = "0.12.4"
+serde_json = "1.0.140"
+uuid = {version = "1.16.0", features = ["v4"]}
