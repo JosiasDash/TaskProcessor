@@ -1,9 +1,6 @@
-use json::JsonValue::Null;
-// use json::{object, JsonValue};
 use serde_json;
-use crate::data::{self, Worker};
+use crate::data::Worker;
 use std::sync::{Arc, Mutex};
-use std::thread::{self, JoinHandle};
 use crate::process;
 // Give TASK TYPE LIST
 pub fn get_task_type()-> Vec<String> {
@@ -21,7 +18,7 @@ pub fn create_task(task_type: String, form: serde_json::Value, worker: Arc<Mutex
         let task = std::thread::spawn(move || process::launch_program(form, worker));
         return task;
     } else {
-        let task = std::thread::spawn(move || process::send_email(form));
+        let task = std::thread::spawn(move || process::send_email(form, worker));
         return task;
     }
 }

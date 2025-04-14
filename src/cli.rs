@@ -1,15 +1,9 @@
-// use tasks;
-// mod tasks;
 use std::io::{self, Write};
 use std::sync::{Arc, Mutex};
-use std::os::unix::thread;
-use std::thread::JoinHandle;
 use serde_json::json;
-// use crate::data::Axis;
 use crate::data::Worker;
 use crate::tasks;
 use crate::data;
-// use crate::utils;
 use crate::utils::generate_id;
 use crate::utils::get_status;
 
@@ -55,13 +49,16 @@ fn list_prompt() {
     }
 }
 
-fn list_tasks(workers: Vec<Arc<Mutex<Worker>>>) {
+fn list_tasks(workers: &Vec<Arc<Mutex<Worker>>>) {
     
     println!("TYPE\tSTATUS\tID");
+
     for worker in workers.iter() {
-    
-        let worker_tmp = worker.lock().unwrap();
-        println!("{}\t{}\t{}", worker_tmp.name, get_status(&worker_tmp.status), worker_tmp.id);
+        let (name, status, id) = {
+            let w = worker.lock().unwrap();
+            (w.name.clone(), get_status(&w.status), w.id.clone())
+        };
+        println!("{}\t{}\t{}", name, status, id);
     }
 }
 
@@ -82,18 +79,19 @@ fn manage_tasks(cmd: String, workers: &mut Vec<Arc<Mutex<Worker>>>) {
         new_worker.lock().unwrap().thread = Some(result);
         workers.push(new_worker);
     } else if  cmd == "send_email" {
-        // _form = email_prompt();
-        // let result = tasks::create_task(String::from("email"), _form);
-        // let new_worker = Worker {
-        //     name: String::from("Email"),
-        //     status: data::Status::PENDING,
-        //     thread: result,
-        //     id: generate_id(),
-        //     log: String::from("")
-        // };
-        // workers.push(new_worker);
+        _form = email_prompt();
+        let new_worker = Arc::new(Mutex::new(Worker {
+            name: String::from("Email"),
+            status: data::Status::PENDING,
+            thread: None,
+            id: generate_id(),
+            log: String::from("")
+        }));
+        let result = tasks::create_task(String::from("email"), _form, Arc::clone(&new_worker));
+        new_worker.lock().unwrap().thread = Some(result);
+        workers.push(new_worker);
     } else if cmd == "tasks" {
-        list_tasks(workers.clone());
+        list_tasks(workers);
     }
 }
 

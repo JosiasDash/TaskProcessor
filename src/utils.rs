@@ -11,7 +11,6 @@ pub fn get_status(status: &data::Status) -> String {
     match status {
         data::Status::PENDING => return String::from("pending"),
         data::Status::SUCCESS => return String::from("success"),
-        data::Status::CANCELED => return String::from("canceled"),
         data::Status::FAILED => return String::from("failed"),
     };
 }

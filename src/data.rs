@@ -1,10 +1,8 @@
 use std::thread::JoinHandle;
-use serde_json;
 
 pub enum Status {
     PENDING,
     SUCCESS,
-    CANCELED,
     FAILED
 }
 
