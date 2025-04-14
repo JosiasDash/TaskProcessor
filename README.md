@@ -42,6 +42,7 @@ launch_program # Launch a specific program
 send_email # Send email to someone
 list # List available type of tasks
 tasks # List all tasks (TYPE STATUS ID)
+exit # Quit program
 ```
 To use email feature, the following env variables are mandatory
 ```bash
