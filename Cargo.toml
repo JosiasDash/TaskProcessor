@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+dotenv = "0.15.0"
+env = "1.0.1"
 exec = "0.3.1"
 json = "0.12.4"
+lettre = "0.11.15"
+project-root = "0.2.2"
 serde_json = "1.0.140"
 uuid = {version = "1.16.0", features = ["v4"]}

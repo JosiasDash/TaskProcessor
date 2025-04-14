@@ -1,5 +1,5 @@
 use std::thread::JoinHandle;
-use json::JsonValue;
+use serde_json;
 
 pub enum Status {
     PENDING,
@@ -9,8 +9,8 @@ pub enum Status {
 }
 
 pub struct Worker {
-    name: String,
-    status: Status,
-    thread: JoinHandle<(JsonValue)>,
-    id: String,
+    pub name: String,
+    pub status: Status,
+    pub thread: JoinHandle<()>,
+    pub id: String,
 }
