@@ -11,6 +11,7 @@ pub enum Status {
 pub struct Worker {
     pub name: String,
     pub status: Status,
-    pub thread: JoinHandle<()>,
+    pub thread: Option<JoinHandle<()>>,
     pub id: String,
+    pub log: String
 }

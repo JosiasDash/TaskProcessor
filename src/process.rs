@@ -1,35 +1,44 @@
 use std::time::Instant;
-use exec;
+use std::sync::{Arc, Mutex};
 // use lettre::transport::smtp::Error;
 use serde_json;
 use lettre::message::header::ContentType;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{Message, SmtpTransport, Transport};
+
+use crate::data::{Status, Worker};
 // use env;
 // use dotenv::dotenv;
 
-pub fn launch_program(form: serde_json::Value) {
+pub fn launch_program(form: serde_json::Value, worker_ptr: Arc<Mutex<Worker>>) {
     let duration = 8.0;
     let now = Instant::now();
     // let _form = &form;
     let mut _bin = String::from("");
+    let mut worker = worker_ptr.lock().unwrap();
     match form["bin"].as_str() {
         Some(x) => {_bin = String::from(x)},
-        None => {panic!("Failed to find bin")}
+        None => {worker.status = Status::FAILED; worker.log = String::from("Failed to find bin")}
     };
-    let args: Vec<String> = match form.get("args").and_then(|value| value.as_array()) {
-        Some(arr) => arr
-        .iter()
-        .filter_map(|value| value.as_str().map(|v| v.to_string())).collect(),
-        None => panic!("Failed to get args")
-    };
+    let args_opt = form.get("args").and_then(|value| value.as_array());
+    let args: Vec<String> = args_opt.unwrap().iter().filter_map(|value|value.as_str().map(|v| v.to_string())).collect();
+    // let args: Vec<String> = match form.get("args").and_then(|value| value.as_array()) {
+    //     Some(arr) => arr
+    //     .iter()
+    //     .filter_map(|value| value.as_str().map(|v| v.to_string())).collect(),
+    //     None => ,
+    // };
     loop {
         if now.elapsed().as_secs_f64() >= duration {
             break;
         }
     }
-    let err = exec::Command::new(_bin).args(&args).exec();
-    println!("End of process {}", err);
+    let child = std::process::Command::new(_bin).args(&args).spawn().expect("Failed to launch program");
+    let result = child.wait_with_output();
+    match result {
+        Ok(_)=> {worker.status = Status::SUCCESS},
+        Err(_)=> {worker.status = Status::FAILED ;worker.log = String::from("Failed to launch program")}
+    }
 }
 
 pub fn send_email(form: serde_json::Value) {
@@ -68,7 +77,7 @@ pub fn send_email(form: serde_json::Value) {
         .credentials(credentials)
         .build();
     match mailer.send(&email_result) {
-        Ok(_) => println!("Mail sent successfully"),
+        Ok(_) => {},
         Err(why)=> panic!("Couldn't send email: {why:?}")
     }
 }

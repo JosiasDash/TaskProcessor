@@ -1,6 +1,9 @@
 // use tasks;
 // mod tasks;
 use std::io::{self, Write};
+use std::sync::{Arc, Mutex};
+use std::os::unix::thread;
+use std::thread::JoinHandle;
 use serde_json::json;
 // use crate::data::Axis;
 use crate::data::Worker;
@@ -52,44 +55,50 @@ fn list_prompt() {
     }
 }
 
-fn list_tasks(workers: &Vec<Worker>) {
+fn list_tasks(workers: Vec<Arc<Mutex<Worker>>>) {
     
     println!("TYPE\tSTATUS\tID");
     for worker in workers.iter() {
-        println!("{}\t{}\t{}", worker.name, get_status(&worker.status), worker.id);
+    
+        let worker_tmp = worker.lock().unwrap();
+        println!("{}\t{}\t{}", worker_tmp.name, get_status(&worker_tmp.status), worker_tmp.id);
     }
 }
 
-fn manage_tasks(cmd: String) {
-    let mut workers: Vec<data::Worker> = Vec::new();
+fn manage_tasks(cmd: String, workers: &mut Vec<Arc<Mutex<Worker>>>) {
+    // let mut workers: Vec<data::Worker> = Vec::new();
     let mut _form = json!({});
     
     if cmd == "launch_program" {
         _form = launch_program_prompt();
-        let result = tasks::create_task(String::from("program"), _form);
-        let new_worker = Worker {
+        let new_worker = Arc::new(Mutex::new(Worker {
             name: String::from("Program"),
             status: data::Status::PENDING,
-            thread: result,
-            id: generate_id()
-        };
+            thread: None,
+            id: generate_id(),
+            log: String::from(""),
+        }));
+        let result = tasks::create_task(String::from("program"), _form, Arc::clone(&new_worker));
+        new_worker.lock().unwrap().thread = Some(result);
         workers.push(new_worker);
     } else if  cmd == "send_email" {
-        _form = email_prompt();
-        let result = tasks::create_task(String::from("email"), _form);
-        let new_worker = Worker {
-            name: String::from("Email"),
-            status: data::Status::PENDING,
-            thread: result,
-            id: generate_id()
-        };
-        workers.push(new_worker);
+        // _form = email_prompt();
+        // let result = tasks::create_task(String::from("email"), _form);
+        // let new_worker = Worker {
+        //     name: String::from("Email"),
+        //     status: data::Status::PENDING,
+        //     thread: result,
+        //     id: generate_id(),
+        //     log: String::from("")
+        // };
+        // workers.push(new_worker);
     } else if cmd == "tasks" {
-        list_tasks(&workers);
+        list_tasks(workers.clone());
     }
 }
 
 pub fn prompt() {
+    let mut workers: Vec<Arc<Mutex<Worker>>> = Vec::new();
     loop {
         let data = get_user_input(String::from("prompt here> "));
         if data == "exit" || data == "Exit" {
@@ -98,7 +107,7 @@ pub fn prompt() {
         if data == "list" {
             list_prompt();
         }
-        manage_tasks(data);
+        manage_tasks(data, &mut workers);
     }
     println!("Bye 👋🏽");
 }
